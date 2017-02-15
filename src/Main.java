@@ -52,12 +52,12 @@ public class Main {
 				c.fill = GridBagConstraints.HORIZONTAL;
 				c.gridy = 0;
 
-				c.weightx = 640;
+				c.weightx = 640/(640+1296);
 				c.gridx = 0;
 				final CameraStream visionStream = new CameraStream(raspinetVision, PORT_VISION, 640, 480, true);
 				f.add(visionStream, c);
 
-				c.weightx = 1296;
+				c.weightx = 1296/(640+1296);
 				c.gridx = 1;
 				final CameraStream driverStream = new CameraStream(raspinetDriver, PORT_DRIVER, 1296, 972, false);
 				f.add(driverStream, c);
@@ -65,8 +65,8 @@ public class Main {
 				f.addComponentListener(new ComponentAdapter() {
 					@Override
 					public void componentResized(ComponentEvent e) {
-						visionStream.resize(visionStream.getWidth());
-						driverStream.resize(driverStream.getWidth());
+						visionStream.resize((int)(f.getContentPane().getWidth()*640.0/(640+1296)));
+						driverStream.resize((int)(f.getContentPane().getWidth()*1296.0/(640+1296)));
 					}
 				});
 
