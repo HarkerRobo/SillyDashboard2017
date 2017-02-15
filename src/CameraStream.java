@@ -10,6 +10,8 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Pipeline;
@@ -51,25 +53,41 @@ public class CameraStream extends JComponent {
 		} else {
 			add(vc, BorderLayout.CENTER);
 		}
+
+		// ISO
+		final JSpinner isoField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.ISO, 100, 800, 1));
+		JLabel isoLabel = new JLabel("ISO");
 		
-		JPanel statusControllerPanel = new JPanel();
-		statusControllerPanel.setLayout(new BorderLayout());
+		JPanel isoPanel = new JPanel();
+		isoPanel.setLayout(new BorderLayout());
+		isoPanel.add(isoLabel, BorderLayout.WEST);
+		isoPanel.add(isoField, BorderLayout.CENTER);
 		
-		add(statusControllerPanel, BorderLayout.SOUTH);
+		// Shutter speed
+		final JSpinner shutterField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.SHUTTER, 100, 6000000, 100));
+		JLabel shutterLabel = new JLabel("Shutter speed");
 		
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new GridLayout(1, 2));
-		statusControllerPanel.add(buttonPanel, BorderLayout.NORTH);
+		JPanel shutterPanel = new JPanel();
+		shutterPanel.setLayout(new BorderLayout());
+		shutterPanel.add(shutterLabel, BorderLayout.WEST);
+		shutterPanel.add(shutterField, BorderLayout.CENTER);
 		
+		// ISO + Shutter speed panel
+		JPanel shutterIsoPanel = new JPanel();
+		shutterIsoPanel.setLayout(new BorderLayout());
+		shutterIsoPanel.add(isoPanel, BorderLayout.EAST);
+		shutterIsoPanel.add(shutterPanel, BorderLayout.WEST);
+		
+		// Start button
 		JButton startButton = new JButton("Start");
 		startButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				networker.reconnect();
+				networker.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
 			}
 		});
-		buttonPanel.add(startButton);
 		
+		// Stop button
 		JButton stopButton = new JButton("Stop");
 		stopButton.addActionListener(new ActionListener() {
 			@Override
@@ -77,12 +95,36 @@ public class CameraStream extends JComponent {
 				networker.disconnect();
 			}
 		});
+		
+		// Button panel
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new GridLayout(1, 2));
+		buttonPanel.add(startButton);
 		buttonPanel.add(stopButton);
 		
+		// ISO + Shutter speed + button panel
+		JPanel controlPanel = new JPanel();
+		controlPanel.setLayout(new BorderLayout());
+		controlPanel.add(buttonPanel, BorderLayout.NORTH);
+		if (showCorners) {
+			controlPanel.add(shutterIsoPanel, BorderLayout.SOUTH);
+		}
+
+		// Status
 		statusLabel = new JLabel();
-		statusControllerPanel.add(statusLabel, BorderLayout.SOUTH);
 		
-		networker.reconnect();
+		// More stuff in a another panel
+		JPanel anotherPanel = new JPanel();
+		anotherPanel.setLayout(new BorderLayout());
+		anotherPanel.add(controlPanel, BorderLayout.NORTH);
+		anotherPanel.add(statusLabel, BorderLayout.CENTER);
+		
+		// Set up everything
+		setLayout(new BorderLayout());
+		add(vc, BorderLayout.CENTER);
+		add(anotherPanel, BorderLayout.SOUTH);
+		
+		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 		
 		setPreferredSize(new Dimension(width, height));
 	}

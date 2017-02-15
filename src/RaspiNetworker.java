@@ -19,6 +19,8 @@ import org.json.JSONObject;
  */
 public class RaspiNetworker extends Thread {
 	public static final String CONNECTING_STRING = "Conecting...";
+	public static final int ISO = 500;
+	public static final int SHUTTER = 200000;
 	
 	private List<RaspiListener> listeners = new LinkedList<RaspiListener>();
 	private List<StatusReceiver> statusReceivers = new LinkedList<StatusReceiver>();
@@ -28,6 +30,9 @@ public class RaspiNetworker extends Thread {
 	private String ip;
 	private int controlPort;
 	private int streamPort;
+	
+	private int iso = ISO;
+	private int shutter = SHUTTER;
 	
 	// Streams
 	private BufferedReader in;
@@ -49,9 +54,10 @@ public class RaspiNetworker extends Thread {
 		out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 	}
 	
-	public void reconnect() {
+	public void reconnect(int newIso, int newShutter) {
+		iso = newIso;
+		shutter = newShutter;
 		openSocket = true;
-		System.out.println(openSocket);
 	}
 	
 	public void disconnect() {
@@ -74,7 +80,7 @@ public class RaspiNetworker extends Thread {
 					if (socket != null) socket.close();
 					connect();
 					socketOpened = true;
-					send(Message.createStartStreamMessage(800, 200000, streamPort));
+					send(Message.createStartStreamMessage(iso, shutter, streamPort));
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");
 				} catch (Exception e) {
