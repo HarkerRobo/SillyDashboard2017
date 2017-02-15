@@ -92,6 +92,7 @@ public class CornerViewer extends JPanel {
 		}
 	}
 	
+	@Override
 	public void paintComponent(Graphics g) {
         g.setColor(getBackground());
         Rectangle r = g.getClipBounds();

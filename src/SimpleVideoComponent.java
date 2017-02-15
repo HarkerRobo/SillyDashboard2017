@@ -416,4 +416,9 @@ class SimpleVideoComponent extends javax.swing.JComponent {
         }
 
     }
+
+    public void cleanup() {
+    	resourceReaper.actionPerformed(null);
+    	resourceTimer.stop();
+    }
 }

@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -15,14 +16,23 @@ import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Pipeline;
+import org.freedesktop.gstreamer.State;
 
 @SuppressWarnings("serial")
 public class CameraStream extends JComponent {
+	private static final int MESSAGE_HEIGHT = 50;
+	
 	private int w;
 	private int h;
 	
 	private JLayeredPane layeredPane = null;
 	private JLabel statusLabel;
+	
+	private JComponent stream;
+	private JPanel controlPanel;
+	
+	private Pipeline pipe;
+	private SimpleVideoComponent vc;
 	
 	public CameraStream(final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
 		w = width;
@@ -38,7 +48,7 @@ public class CameraStream extends JComponent {
 		
 		setLayout(new BorderLayout());
 		
-		SimpleVideoComponent vc = createVideoComponent(streamPort, width, height);
+		vc = createVideoComponent(streamPort, width, height);
 		
 		if (showCorners) {
 			layeredPane = new JLayeredPane();
@@ -50,8 +60,10 @@ public class CameraStream extends JComponent {
 			layeredPane.add(cv, new Integer(1));
 			
 			add(layeredPane, BorderLayout.CENTER);
+			stream = layeredPane;
 		} else {
 			add(vc, BorderLayout.CENTER);
+			stream = vc;
 		}
 
 		// ISO
@@ -103,7 +115,7 @@ public class CameraStream extends JComponent {
 		buttonPanel.add(stopButton);
 		
 		// ISO + Shutter speed + button panel
-		JPanel controlPanel = new JPanel();
+		controlPanel = new JPanel();
 		controlPanel.setLayout(new BorderLayout());
 		controlPanel.add(buttonPanel, BorderLayout.NORTH);
 		if (showCorners) {
@@ -121,7 +133,7 @@ public class CameraStream extends JComponent {
 		
 		// Set up everything
 		setLayout(new BorderLayout());
-		add(vc, BorderLayout.CENTER);
+		add(stream, BorderLayout.CENTER);
 		add(anotherPanel, BorderLayout.SOUTH);
 		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
@@ -129,10 +141,10 @@ public class CameraStream extends JComponent {
 		setPreferredSize(new Dimension(width, height));
 	}
 	
-	private static SimpleVideoComponent createVideoComponent(int port, int width, int height) {
+	private SimpleVideoComponent createVideoComponent(int port, int width, int height) {
 		SimpleVideoComponent vc = new SimpleVideoComponent();
         Bin bin = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert", true);
-        Pipeline pipe = new Pipeline();
+        pipe = new Pipeline();
         pipe.addMany(bin, vc.getElement());
         Pipeline.linkMany(bin, vc.getElement()); 
         
@@ -144,12 +156,19 @@ public class CameraStream extends JComponent {
 	
 	public void resize(int width) {
 		int newHeight = (int) ((double) width / w * h);
-		setPreferredSize(new Dimension(width, newHeight));
+		stream.setPreferredSize(new Dimension(width, newHeight));
+		setPreferredSize(new Dimension(width, newHeight + controlPanel.getHeight() + MESSAGE_HEIGHT));
 		if (layeredPane != null) {
 			for (Component p : layeredPane.getComponents()) {
 				p.setBounds(0, 0, width, newHeight);
 			}
 		}
 		revalidate();
+	}
+	
+	public void close() {
+		pipe.setState(State.PAUSED);
+		vc.cleanup();
+		pipe.setState(State.NULL);
 	}
 }
