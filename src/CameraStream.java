@@ -79,8 +79,10 @@ public class CameraStream extends JComponent {
 		});
 		buttonPanel.add(stopButton);
 		
-		statusLabel = new JLabel(RaspiNetworker.CONNECTING_STRING);
+		statusLabel = new JLabel();
 		statusControllerPanel.add(statusLabel, BorderLayout.SOUTH);
+		
+		networker.reconnect();
 		
 		setPreferredSize(new Dimension(width, height));
 	}

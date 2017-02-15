@@ -33,7 +33,7 @@ public class RaspiNetworker extends Thread {
 	private BufferedReader in;
 	private PrintWriter out;
 	
-	private boolean openSocket = true; // Whether to reopen socket in the "event loop"
+	private boolean openSocket = false; // Whether to reopen socket in the "event loop"
 	private boolean closeSocket = false;
 	private boolean socketOpened = false;
 
@@ -51,24 +51,32 @@ public class RaspiNetworker extends Thread {
 	
 	public void reconnect() {
 		openSocket = true;
+		System.out.println(openSocket);
 	}
 	
 	public void disconnect() {
-		closeSocket = false;
+		closeSocket = true;
 	}
 
 	public void run() {
+		boolean didSomething = false;
+		
 		while (true) {
-			if (openSocket == true) {
+			didSomething = false;
+			
+			if (openSocket) {
+				didSomething = true;
+				openSocket = false;
+				System.out.println("Connecting...");
 				for (StatusReceiver receiver : statusReceivers)
 					receiver.receiveStatus(CONNECTING_STRING);
-				openSocket = false;
 				try {
+					if (socket != null) socket.close();
 					connect();
 					socketOpened = true;
+					send(Message.createStartStreamMessage(800, 200000, streamPort));
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");
-					send(Message.createStartStreamMessage(500, 2000, streamPort));
 				} catch (Exception e) {
 					System.out.println("Error connecting to " + ip + ":" + controlPort);
 					socketOpened = false;
@@ -77,14 +85,28 @@ public class RaspiNetworker extends Thread {
 				}
 			}
 			
-			if (closeSocket == true) {
+			if (closeSocket) {
+				didSomething = true;
 				closeSocket = false;
+				System.out.println("Going to disconnect...");
 				if (socketOpened) {
-					send(Message.createStopStreamMessage());
+					try {
+						System.out.println("Disconnecting...");
+						send(Message.createStopStreamMessage());
+						socket.close();
+						socket = null;
+						socketOpened = false;
+						for (StatusReceiver receiver : statusReceivers)
+							receiver.receiveStatus("Socket successfully closed");
+					} catch (Exception e) {
+						for (StatusReceiver receiver : statusReceivers)
+							receiver.receiveStatus("Encountered error while closing socket: " + e);
+					}
 				}
 			}
 			
 			if (socketOpened) {
+				didSomething = true;
 				try {
 					JSONObject obj = new JSONObject(in.readLine());
 					for (RaspiListener l : listeners) {
@@ -95,6 +117,14 @@ public class RaspiNetworker extends Thread {
 				} catch (IOException e) {
 					e.printStackTrace();
 				} catch (NullPointerException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if (!didSomething) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
