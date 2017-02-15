@@ -18,28 +18,33 @@ import org.json.JSONObject;
  *
  */
 public class RaspiNetworker extends Thread {
+	public static final String CONNECTING_STRING = "Conecting...";
+	
 	private List<RaspiListener> listeners = new LinkedList<RaspiListener>();
 	private List<StatusReceiver> statusReceivers = new LinkedList<StatusReceiver>();
 	
 	// Socket configuration
 	private Socket socket;
 	private String ip;
-	private int port;
+	private int controlPort;
+	private int streamPort;
 	
 	// Streams
 	private BufferedReader in;
 	private PrintWriter out;
 	
 	private boolean openSocket = true; // Whether to reopen socket in the "event loop"
+	private boolean closeSocket = false;
 	private boolean socketOpened = false;
 
-	public RaspiNetworker(String ipaddress, int portnumber) {
+	public RaspiNetworker(String ipaddress, int controlPortNum, int streamPortNum) {
 		ip = ipaddress;
-		port = portnumber;
+		controlPort = controlPortNum;
+		streamPort = streamPortNum;
 	}
 	
 	private void connect() throws UnknownHostException, IOException {
-		socket = new Socket(ip, port);
+		socket = new Socket(ip, controlPort);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 	}
@@ -47,21 +52,35 @@ public class RaspiNetworker extends Thread {
 	public void reconnect() {
 		openSocket = true;
 	}
+	
+	public void disconnect() {
+		closeSocket = false;
+	}
 
 	public void run() {
 		while (true) {
 			if (openSocket == true) {
+				for (StatusReceiver receiver : statusReceivers)
+					receiver.receiveStatus(CONNECTING_STRING);
 				openSocket = false;
 				try {
 					connect();
 					socketOpened = true;
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");
+					send(Message.createStartStreamMessage(500, 2000, streamPort));
 				} catch (Exception e) {
-					System.out.println("Error connecting to " + ip + ":" + port);
+					System.out.println("Error connecting to " + ip + ":" + controlPort);
 					socketOpened = false;
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Encountered error while openning socket: " + e);
+				}
+			}
+			
+			if (closeSocket == true) {
+				closeSocket = false;
+				if (socketOpened) {
+					send(Message.createStopStreamMessage());
 				}
 			}
 			
@@ -82,7 +101,7 @@ public class RaspiNetworker extends Thread {
 		}
 	}
 
-	public void send(JSONObject obj) {
+	private void send(JSONObject obj) {
 		out.println(obj);
 		out.flush();
 	}

@@ -19,4 +19,11 @@ public class Message {
 			return null;
 		}
 	}
+	
+	public static JSONObject createStopStreamMessage()
+	{
+		JSONObject message = new JSONObject();
+		message.put("type", "stop");
+		return message;
+	}
 }

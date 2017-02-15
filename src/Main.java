@@ -5,6 +5,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
 import javax.swing.JFrame;
+import javax.swing.UIManager;
 import org.freedesktop.gstreamer.Gst;
 
 /**
@@ -26,10 +27,10 @@ public class Main {
 	public static void main(String[] args) {
 		Gst.init("Stream viewer", args);
 
-		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT);
+		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT, PORT_VISION);
 		raspinetVision.start();
 
-		raspinetDriver = new RaspiNetworker(IP_DRIVER, CONTROL_PORT);
+		raspinetDriver = new RaspiNetworker(IP_DRIVER, CONTROL_PORT, PORT_DRIVER);
 		raspinetDriver.start();
 		initializeFrame();
 	}
@@ -39,6 +40,12 @@ public class Main {
 
 			@Override
 			public void run() {
+				try {
+					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+				} catch (Exception e) {
+					System.out.println("Error setting look and feel");
+				}
+				
 				final JFrame f = new JFrame("Camera Test");
 				f.setLayout(new GridBagLayout());
 				GridBagConstraints c = new GridBagConstraints();
