@@ -51,10 +51,10 @@ def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsE
     vpad = height - clienth
     hpad = width - clientw
 
-    w = DESIRED_SIZES[stream][0] + hpad
-    h = DESIRED_SIZES[stream][1] + vpad
+    newwidth = DESIRED_SIZES[stream][0] + hpad
+    newheight = DESIRED_SIZES[stream][1] + vpad
 
-    x, y = POSITIONS[stream](w)
-    h.user32.MoveWindow(hwnd, x, y, w, h, True)
+    x, y = POSITIONS[stream](newwidth)
+    h.user32.MoveWindow(hwnd, x, y, newwidth, newheight, True)
 
 h.register_hook(callback)
