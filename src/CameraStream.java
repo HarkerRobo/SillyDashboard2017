@@ -1,13 +1,11 @@
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
@@ -15,28 +13,19 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
-import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
 
 @SuppressWarnings("serial")
-public class CameraStream extends JComponent {
-	private static final int MESSAGE_HEIGHT = 50;
-	
-	private int w;
-	private int h;
-	
+public class CameraStream extends JPanel {
 	private JLayeredPane layeredPane = null;
 	private JLabel statusLabel;
 	
-	private JComponent stream;
 	private JPanel controlPanel;
 	
-	private Pipeline pipe;
-	private SimpleVideoComponent vc;
+	private Bin pipe;
 	
-	public CameraStream(final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
-		w = width;
-		h = height;
+	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
+		createStream(streamPort, width, height);
 		
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
 			
@@ -48,22 +37,13 @@ public class CameraStream extends JComponent {
 		
 		setLayout(new BorderLayout());
 		
-		vc = createVideoComponent(streamPort, width, height);
-		
 		if (showCorners) {
 			layeredPane = new JLayeredPane();
-			layeredPane.setPreferredSize(new Dimension(width, height));
-			
-			layeredPane.add(vc, new Integer(0));
 			
 			CornerViewer cv = new CornerViewer(networker, width);
 			layeredPane.add(cv, new Integer(1));
 			
 			add(layeredPane, BorderLayout.CENTER);
-			stream = layeredPane;
-		} else {
-			add(vc, BorderLayout.CENTER);
-			stream = vc;
 		}
 
 		// ISO
@@ -124,51 +104,24 @@ public class CameraStream extends JComponent {
 
 		// Status
 		statusLabel = new JLabel();
+		System.out.println(statusLabel.getPreferredSize());
+		statusLabel.setPreferredSize(new Dimension(0, 48));
 		
-		// More stuff in a another panel
-		JPanel anotherPanel = new JPanel();
-		anotherPanel.setLayout(new BorderLayout());
-		anotherPanel.add(controlPanel, BorderLayout.NORTH);
-		anotherPanel.add(statusLabel, BorderLayout.CENTER);
+		setBorder(BorderFactory.createTitledBorder(name));
 		
-		// Set up everything
 		setLayout(new BorderLayout());
-		add(stream, BorderLayout.CENTER);
-		add(anotherPanel, BorderLayout.SOUTH);
+		add(controlPanel, BorderLayout.NORTH);
+		add(statusLabel, BorderLayout.CENTER);
 		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
-		
-		setPreferredSize(new Dimension(width, height));
 	}
 	
-	private SimpleVideoComponent createVideoComponent(int port, int width, int height) {
-		SimpleVideoComponent vc = new SimpleVideoComponent();
-        Bin bin = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert", true);
-        pipe = new Pipeline();
-        pipe.addMany(bin, vc.getElement());
-        Pipeline.linkMany(bin, vc.getElement()); 
-        
+	private void createStream(int port, int width, int height) {
+        pipe = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", true);
         pipe.play();
-        vc.setPreferredSize(new Dimension(100, 100));
-        
-        return vc;
-	}
-	
-	public void resize(int width) {
-		int newHeight = (int) ((double) width / w * h);
-		stream.setPreferredSize(new Dimension(width, newHeight));
-		setPreferredSize(new Dimension(width, newHeight + controlPanel.getHeight() + MESSAGE_HEIGHT));
-		if (layeredPane != null) {
-			for (Component p : layeredPane.getComponents()) {
-				p.setBounds(0, 0, width, newHeight);
-			}
-		}
-		revalidate();
 	}
 	
 	public void close() {
-		pipe.setState(State.PAUSED);
-		vc.cleanup();
 		pipe.setState(State.NULL);
 	}
 }

@@ -1,9 +1,10 @@
+import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import org.freedesktop.gstreamer.Gst;
@@ -29,7 +30,7 @@ public class Main {
 	public static void main(String[] args) {
 		Gst.init("Stream viewer", args);
 
-		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT, PORT_VISION, true);
+		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT, PORT_VISION, false);
 		raspinetVision.setDaemon(true);
 		raspinetVision.start();
 
@@ -55,36 +56,25 @@ public class Main {
 				}
 				
 				final JFrame f = new JFrame("Camera Test");
-				f.setLayout(null);
+				f.getContentPane().setLayout(new BoxLayout(f.getContentPane(), BoxLayout.PAGE_AXIS));
 
-				final CameraStream visionStream = new CameraStream(raspinetVision, PORT_VISION, 640, 480, true);
+				final CameraStream visionStream = new CameraStream("Vision camera", raspinetVision, PORT_VISION, 640, 480, true);
 				f.add(visionStream);
-
-				final CameraStream driverStream = new CameraStream(raspinetDriver, PORT_DRIVER, 1296, 972, false);
-				f.add(driverStream);
+				visionStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) visionStream.getPreferredSize().getHeight()));
 				
-				final CameraStream gearStream = new CameraStream(raspinetGear, PORT_GEAR, 640, 480, false);
+				f.add(Box.createVerticalGlue()); // Padding
+
+				final CameraStream driverStream = new CameraStream("Driver camera", raspinetDriver, PORT_DRIVER, 1296, 972, false);
+				f.add(driverStream);
+				driverStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) driverStream.getPreferredSize().getHeight()));
+
+				f.add(Box.createVerticalGlue()); // Padding
+				
+				final CameraStream gearStream = new CameraStream("Gear camera", raspinetGear, PORT_GEAR, 640, 480, false);
 				f.add(gearStream);
+				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
 
-				f.addComponentListener(new ComponentAdapter() {
-					@Override
-					public void componentResized(ComponentEvent e) {
-						visionStream.resize((int)(f.getContentPane().getWidth()*640.0/(640+1296)));
-						driverStream.resize((int)(f.getContentPane().getWidth()*1296.0/(640+1296)));
-						gearStream.resize((int)(f.getContentPane().getWidth()*640.0/(640+1296)));
-						
-						visionStream.setBounds(0, 0, (int) visionStream.getPreferredSize().getWidth(),
-													 (int) visionStream.getPreferredSize().getHeight());
-						driverStream.setBounds((int) visionStream.getPreferredSize().getWidth(), 0,
-											   (int) driverStream.getPreferredSize().getWidth(),
-											   (int) driverStream.getPreferredSize().getHeight());
-						gearStream.setBounds(0, (int) visionStream.getPreferredSize().getHeight(),
-												(int) gearStream.getPreferredSize().getWidth(),
-												(int) gearStream.getPreferredSize().getHeight());
-					}
-				});
-
-				f.setSize(1776, 1200);
+				f.pack();
 				f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 				f.addWindowListener(new WindowAdapter() {
 					@Override
