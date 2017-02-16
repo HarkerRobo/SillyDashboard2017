@@ -8,7 +8,7 @@ STREAMS = (DRIVER, VISION) = range(2)
 TOLERANCE = 0
 
 WIDTHS = {
-    DRIVER: 1296,
+    DRIVER: 970, #1296, # The laptop's screen resolution is limitted, so the window will be limited to 970 px across.
     VISION: 640
 }
 
@@ -29,7 +29,7 @@ def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsE
 
     handled.append(hwnd) #Append the window id
     width, height = h.windowsize(hwnd)
-    
+
     clientw, _ = h.clientsize(hwnd)
 
     # Find which stream the window is for
