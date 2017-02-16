@@ -54,9 +54,16 @@ def title(hwnd):
     user32.GetWindowTextA(hwnd, buff, length + 1)
     return buff.value
 
-def size(hwnd):
+def windowsize(hwnd):
     rect = ctypes.wintypes.RECT()
     user32.GetWindowRect(hwnd, ctypes.byref(rect))
+    width = rect.right - rect.left
+    height = rect.bottom - rect.top
+    return (width, height)
+
+def clientsize(hwnd):
+    rect = ctypes.wintypes.RECT()
+    user32.GetClientRect(hwnd, ctypes.byref(rect))
     width = rect.right - rect.left
     height = rect.bottom - rect.top
     return (width, height)

@@ -1,11 +1,11 @@
 import winapi_helpers as h
 
-MONITOR = h.monitors()[0]
+MONITOR = h.monitors()[-1]
 print(MONITOR)
 
 STREAMS = (DRIVER, VISION) = range(2)
 
-TOLERANCE = 100
+TOLERANCE = 0
 
 WIDTHS = {
     DRIVER: 1296,
@@ -14,7 +14,7 @@ WIDTHS = {
 
 POSITIONS = {
     DRIVER: lambda w: (MONITOR.x + MONITOR.w - w, MONITOR.y),
-    VISION: lambda w: (MONITOR.x + MONITOR.w - w, MONITOR.y)
+    VISION: lambda w: (MONITOR.x, MONITOR.y)
 }
 
 handled = []
@@ -28,19 +28,21 @@ def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsE
         return # Don't reposition again
 
     handled.append(hwnd) #Append the window id
-    width, height = h.size(hwnd)
-    print(width, height)
+    width, height = h.windowsize(hwnd)
+    
+    clientw, _ = h.clientsize(hwnd)
 
     # Find which stream the window is for
     stream = None
     for s in WIDTHS:
-        if abs(WIDTHS[s] - width) < TOLERANCE:
+        if abs(WIDTHS[s] - clientw) <= TOLERANCE:
             stream = s
 
     if stream is None:
-        print('Window with width {} not handled'.format(width))
+        print('Window with width {} not handled'.format(clientw))
         return
 
+    # Reposition the window
     x, y = POSITIONS[stream](width)
     h.user32.MoveWindow(hwnd, x, y, width, height, True)
 
