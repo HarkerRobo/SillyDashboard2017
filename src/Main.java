@@ -2,6 +2,9 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -26,6 +29,8 @@ public class Main {
 	public static RaspiNetworker raspinetDriver;
 	public static RaspiNetworker raspinetVision;
 	public static RaspiNetworker raspinetGear;
+	
+	private static Process p;
 
 	public static void main(String[] args) {
 		Gst.init("Stream viewer", args);
@@ -41,6 +46,7 @@ public class Main {
 		raspinetGear = new RaspiNetworker(IP_DRIVER, 6001, PORT_GEAR, false);
 		raspinetGear.setDaemon(true);
 		raspinetGear.start();
+		initializeMonitor();
 		initializeFrame();
 	}
 
@@ -81,10 +87,13 @@ public class Main {
 				    public void windowClosing(WindowEvent e) {
 				    	f.dispose();
 				    	
-				    	// TODO: Calling these prevents Java from fully exiting. WHY????
-//				    	visionStream.close();
-//				    	driverStream.close();
-//				    	gearStream.close();
+				    	visionStream.close();
+				    	driverStream.close();
+				    	gearStream.close();
+				    	
+				    	if (p != null) {
+				    		p.destroy();
+				    	}
 				        System.exit(0);
 				    }
 				});
@@ -92,5 +101,15 @@ public class Main {
 				f.setVisible(true);
 			}
 		});
+	}
+	
+	public static void initializeMonitor()
+	{
+		try {
+			p = Runtime.getRuntime().exec("python src/window_monitor.py");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

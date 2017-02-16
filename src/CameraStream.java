@@ -104,7 +104,6 @@ public class CameraStream extends JPanel {
 
 		// Status
 		statusLabel = new JLabel();
-		System.out.println(statusLabel.getPreferredSize());
 		statusLabel.setPreferredSize(new Dimension(0, 48));
 		
 		setBorder(BorderFactory.createTitledBorder(name));
@@ -117,7 +116,7 @@ public class CameraStream extends JPanel {
 	}
 	
 	private void createStream(int port, int width, int height) {
-        pipe = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", true);
+        pipe = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false);
         pipe.play();
 	}
 	
