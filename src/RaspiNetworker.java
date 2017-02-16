@@ -30,6 +30,7 @@ public class RaspiNetworker extends Thread {
 	private String ip;
 	private int controlPort;
 	private int streamPort;
+	private boolean shouldReceiveCorners;
 	
 	private int iso = ISO;
 	private int shutter = SHUTTER;
@@ -42,10 +43,11 @@ public class RaspiNetworker extends Thread {
 	private boolean closeSocket = false;
 	private boolean socketOpened = false;
 
-	public RaspiNetworker(String ipaddress, int controlPortNum, int streamPortNum) {
+	public RaspiNetworker(String ipaddress, int controlPortNum, int streamPortNum, boolean receiveCorners) {
 		ip = ipaddress;
 		controlPort = controlPortNum;
 		streamPort = streamPortNum;
+		shouldReceiveCorners = receiveCorners;
 	}
 	
 	private void connect() throws UnknownHostException, IOException {
@@ -111,7 +113,7 @@ public class RaspiNetworker extends Thread {
 				}
 			}
 			
-			if (socketOpened) {
+			if (socketOpened && shouldReceiveCorners) {
 				didSomething = true;
 				try {
 					JSONObject obj = new JSONObject(in.readLine());

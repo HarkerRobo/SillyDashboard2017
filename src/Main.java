@@ -29,15 +29,15 @@ public class Main {
 	public static void main(String[] args) {
 		Gst.init("Stream viewer", args);
 
-		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT, PORT_VISION);
+		raspinetVision = new RaspiNetworker(IP_VISION, CONTROL_PORT, PORT_VISION, true);
 		raspinetVision.setDaemon(true);
 		raspinetVision.start();
 
-		raspinetDriver = new RaspiNetworker(IP_DRIVER, CONTROL_PORT, PORT_DRIVER);
+		raspinetDriver = new RaspiNetworker(IP_DRIVER, CONTROL_PORT, PORT_DRIVER, false);
 		raspinetDriver.setDaemon(true);
 		raspinetDriver.start();
 		
-		raspinetGear = new RaspiNetworker(IP_DRIVER, 6001, PORT_GEAR);
+		raspinetGear = new RaspiNetworker(IP_DRIVER, 6001, PORT_GEAR, false);
 		raspinetGear.setDaemon(true);
 		raspinetGear.start();
 		initializeFrame();
