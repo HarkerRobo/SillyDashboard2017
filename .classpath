@@ -5,5 +5,6 @@
 	<classpathentry kind="lib" path="jars/gst1-java-core-0.9-161201.jar"/>
 	<classpathentry kind="lib" path="jars/json-20160810.jar"/>
 	<classpathentry kind="lib" path="jars/jna-4.2.2.jar"/>
+	<classpathentry kind="lib" path="jars/snakeyaml-1.16.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

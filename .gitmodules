@@ -1,0 +1,3 @@
+[submodule "src/shared"]
+	path = shared
+	url = https://github.com/HarkerRobo/shared
