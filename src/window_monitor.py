@@ -8,12 +8,12 @@ STREAMS = (DRIVER, VISION) = range(2)
 TOLERANCE = 0
 
 EXPECTED_WIDTHS = {
-    DRIVER: 970, # The laptop's screen resolution is limitted, so the window will be limited to 970 px across.
+    DRIVER: 640,
     VISION: 640
 }
 
 DESIRED_SIZES = {
-    DRIVER: (1296, 972),
+    DRIVER: (640, 480),
     VISION: (640, 480)
 }
 
@@ -23,6 +23,7 @@ POSITIONS = {
 }
 
 handled = []
+detected_streams = STREAMS[:]
 
 def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
     title = h.title(hwnd)
@@ -39,13 +40,15 @@ def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsE
 
     # Find which stream the window is for
     stream = None
-    for s in EXPECTED_WIDTHS:
+    for s in detected_streams:
         if abs(EXPECTED_WIDTHS[s] - clientw) <= TOLERANCE:
             stream = s
 
     if stream is None:
         print('Window with width {} not handled'.format(clientw))
         return
+
+    detected_streams.remove(stream)
 
     # Reposition and possibly resize the window
     vpad = height - clienth
