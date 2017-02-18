@@ -23,7 +23,7 @@ POSITIONS = {
 }
 
 handled = []
-detected_streams = STREAMS[:]
+detected_streams = [s for s in STREAMS]
 
 def callback(hWinEventHook, event, hwnd, idObject, idChild, dwEventThread, dwmsEventTime):
     title = h.title(hwnd)
