@@ -23,8 +23,12 @@ public class CameraStream extends JPanel {
 	private JPanel controlPanel;
 
 	private Bin pipe;
+	private RaspiNetworker nwkr;
+	private JSpinner isoField;
+	private JSpinner shutterField;
 
 	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
+		nwkr = networker;
 		createStream(streamPort, width, height);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
@@ -47,7 +51,7 @@ public class CameraStream extends JPanel {
 		}
 
 		// ISO
-		final JSpinner isoField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.ISO, 100, 800, 1));
+		isoField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.ISO, 100, 800, 1));
 		JLabel isoLabel = new JLabel("ISO");
 
 		JPanel isoPanel = new JPanel();
@@ -56,7 +60,7 @@ public class CameraStream extends JPanel {
 		isoPanel.add(isoField, BorderLayout.CENTER);
 
 		// Shutter speed
-		final JSpinner shutterField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.SHUTTER, 100, 6000000, 100));
+		shutterField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.SHUTTER, 100, 6000000, 100));
 		JLabel shutterLabel = new JLabel("Shutter speed");
 
 		JPanel shutterPanel = new JPanel();
@@ -75,7 +79,7 @@ public class CameraStream extends JPanel {
 		startButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				networker.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
+				connect();
 			}
 		});
 
@@ -84,7 +88,7 @@ public class CameraStream extends JPanel {
 		stopButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				networker.disconnect();
+				disconnect();
 			}
 		});
 
@@ -122,5 +126,13 @@ public class CameraStream extends JPanel {
 
 	public void close() {
 		pipe.setState(State.NULL);
+	}
+	
+	public void disconnect() {
+		nwkr.disconnect();
+	}
+	
+	public void connect() {
+		nwkr.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
 	}
 }

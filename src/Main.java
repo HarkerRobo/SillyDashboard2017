@@ -1,12 +1,18 @@
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import org.freedesktop.gstreamer.Gst;
 
@@ -55,6 +61,7 @@ public class Main {
 	public static void initializeFrame() {
 		EventQueue.invokeLater(new Runnable() {
 
+			@SuppressWarnings("serial")
 			@Override
 			public void run() {
 				try {
@@ -100,6 +107,27 @@ public class Main {
 				    }
 				});
 
+				f.getRootPane().getInputMap().put(
+			            KeyStroke.getKeyStroke(KeyEvent.VK_R, 0), "r");
+		        f.getRootPane().getActionMap().put("r", new AbstractAction() {
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						visionStream.disconnect();
+				    	driverStream.disconnect();
+				    	gearStream.disconnect();
+				    	
+				    	try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+				    	
+				    	visionStream.connect();
+				    	driverStream.connect();
+				    	gearStream.connect();
+					}
+		        });
+				
 				f.setVisible(true);
 			}
 		});
