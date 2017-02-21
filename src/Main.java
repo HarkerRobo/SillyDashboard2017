@@ -4,8 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -15,6 +17,10 @@ import javax.swing.JFrame;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import org.freedesktop.gstreamer.Gst;
+
+import net.java.games.input.Component;
+import net.java.games.input.Controller;
+import net.java.games.input.ControllerEnvironment;
 
 /**
  *
@@ -53,6 +59,7 @@ public class Main {
 			raspinetGear.start();
 			initializeMonitor();
 			initializeFrame();
+			pollLogitech();
 		} catch (FileNotFoundException e) {
 			System.out.println("Could not load config file");
 		}
@@ -140,6 +147,24 @@ public class Main {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+	
+	public static void pollLogitech() {
+		Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
+		Controller logitech = null;
+		for (Controller c : ca) {
+			if (c.getName().equals("Logitech Dual Action"))
+				logitech = c;
+		}
+		
+		if (logitech != null) {
+			while (true) {
+				 logitech.poll();
+		         for (Component c : logitech.getComponents()) {
+		            System.out.println(c.getName());
+		         }
+			}
 		}
 	}
 }

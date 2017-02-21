@@ -6,6 +6,10 @@
 	<classpathentry kind="lib" path="jars/json-20160810.jar"/>
 	<classpathentry kind="lib" path="jars/jna-4.2.2.jar"/>
 	<classpathentry kind="lib" path="jars/snakeyaml-1.16.jar"/>
-	<classpathentry kind="lib" path="jars/jinput-2.0.5.jar"/>
+	<classpathentry kind="lib" path="jars/jinput.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="SillyDashboard2017/jars"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
