@@ -37,10 +37,14 @@ public class Main {
 	public static RaspiNetworker raspinetVision;
 	public static RaspiNetworker raspinetGear;
 
+	private static CameraStream driverStream;
+	private static CameraStream visionStream;
+	private static CameraStream gearStream;
+	
 	private static Config c;
 	private static Process p;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		Gst.init("Stream viewer", args);
 		
 		try {
@@ -80,19 +84,19 @@ public class Main {
 				final JFrame f = new JFrame("Camera Test");
 				f.getContentPane().setLayout(new BoxLayout(f.getContentPane(), BoxLayout.PAGE_AXIS));
 
-				final CameraStream visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true);
+				visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true);
 				f.add(visionStream);
 				visionStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) visionStream.getPreferredSize().getHeight()));
 				
 				f.add(Box.createVerticalGlue()); // Padding
 
-				final CameraStream driverStream = new CameraStream("Driver camera", raspinetDriver, c.strmPort(DRIVER), 1296, 972, false);
+				driverStream = new CameraStream("Driver camera", raspinetDriver, c.strmPort(DRIVER), 1296, 972, false);
 				f.add(driverStream);
 				driverStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) driverStream.getPreferredSize().getHeight()));
 
 				f.add(Box.createVerticalGlue()); // Padding
 				
-				final CameraStream gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false);
+				gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false);
 				f.add(gearStream);
 				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
 
@@ -150,20 +154,39 @@ public class Main {
 		}
 	}
 	
-	public static void pollLogitech() {
+	public static void pollLogitech() throws InterruptedException  {
 		Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
 		Controller logitech = null;
 		for (Controller c : ca) {
-			if (c.getName().equals("Logitech Dual Action"))
+			if (c.getName().startsWith("Logitech Dual Action"))
 				logitech = c;
 		}
-		
 		if (logitech != null) {
 			while (true) {
 				 logitech.poll();
 		         for (Component c : logitech.getComponents()) {
-		            System.out.println(c.getName());
+		        	if(c.getName().equals("Button 0") && c.getPollData() == 1.0f) {
+		        		System.out.println("Turning driver stream on");
+		        		driverStream.connect();
+		        		Thread.sleep(500);
+		        	}
+		        	if(c.getName().equals("Button 1") && c.getPollData() == 1.0f) {
+		        		System.out.println("Turning driver stream off");
+		        		driverStream.disconnect();		
+		        		Thread.sleep(500);
+		        	}
+		        	if(c.getName().equals("Button 2") && c.getPollData() == 1.0f) {
+		        		System.out.println("Turning gear stream on");
+		        		gearStream.connect();
+		        		Thread.sleep(500);
+		        	}
+		        	if(c.getName().equals("Button 3") && c.getPollData() == 1.0f) {
+		        		System.out.println("Turning gear stream off");
+		        		gearStream.disconnect();
+		        		Thread.sleep(500);
+		        	}
 		         }
+		         Thread.sleep(100);
 			}
 		}
 	}
