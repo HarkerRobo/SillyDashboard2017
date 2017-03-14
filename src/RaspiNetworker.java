@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ public class RaspiNetworker extends Thread {
 	public static final String CONNECTING_STRING = "Conecting...";
 	public static final int ISO = 500;
 	public static final int SHUTTER = 200000;
+	public static final int SOCKET_TIMEOUT = 5000;
 	
 	private List<RaspiListener> listeners = new LinkedList<RaspiListener>();
 	private List<StatusReceiver> statusReceivers = new LinkedList<StatusReceiver>();
@@ -50,8 +52,13 @@ public class RaspiNetworker extends Thread {
 		shouldReceiveCorners = receiveCorners;
 	}
 	
+	public String getIp() {
+		return ip;
+	}
+	
 	private void connect() throws UnknownHostException, IOException {
-		socket = new Socket(ip, controlPort);
+		socket = new Socket();
+		socket.connect(new InetSocketAddress(ip, controlPort), SOCKET_TIMEOUT);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 	}

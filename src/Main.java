@@ -77,7 +77,7 @@ public class Main {
 					System.out.println("Error setting look and feel");
 				}
 				
-				final JFrame f = new JFrame("Camera Test");
+				final JFrame f = new JFrame("SillyDashboard");
 				f.getContentPane().setLayout(new BoxLayout(f.getContentPane(), BoxLayout.PAGE_AXIS));
 
 				visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true);

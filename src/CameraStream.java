@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -17,6 +18,7 @@ import org.freedesktop.gstreamer.State;
 
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
+	
 	private JLayeredPane layeredPane = null;
 	private JLabel statusLabel;
 
@@ -110,12 +112,32 @@ public class CameraStream extends JPanel {
 		statusLabel = new JLabel();
 		statusLabel.setPreferredSize(new Dimension(0, 48));
 
+		// Availability
+		JPanel availPanel = new JPanel();
+		
+		JPanel pingPanel = new JPanel();
+		JLabel pingLabel = new JLabel();
+		pingLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, pingLabel.getFont().getSize()));
+		pingPanel.add(pingLabel);
+		pingPanel.add(new JLabel("Pingable"));
+		availPanel.add(pingPanel);
+		
+		JPanel sshPanel = new JPanel();
+		JLabel sshLabel = new JLabel("SSHable");
+		sshLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, pingLabel.getFont().getSize()));
+		sshPanel.add(sshLabel);
+		sshPanel.add(new JLabel("SSHable"));
+		availPanel.add(sshPanel);
+		
 		setBorder(BorderFactory.createTitledBorder(name));
 
 		setLayout(new BorderLayout());
 		add(controlPanel, BorderLayout.NORTH);
 		add(statusLabel, BorderLayout.CENTER);
+		add(availPanel, BorderLayout.SOUTH);
 
+		new StatusThread(networker.getIp(), pingLabel, sshLabel).start();
+		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
