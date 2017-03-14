@@ -9,6 +9,8 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,6 +47,8 @@ public class RaspiNetworker extends Thread {
 	private boolean closeSocket = false;
 	private boolean socketOpened = false;
 
+	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + RaspiNetworker.class.getName());
+	
 	public RaspiNetworker(String ipaddress, int controlPortNum, int streamPortNum, boolean receiveCorners) {
 		ip = ipaddress;
 		controlPort = controlPortNum;
@@ -82,7 +86,7 @@ public class RaspiNetworker extends Thread {
 			if (openSocket) {
 				didSomething = true;
 				openSocket = false;
-				System.out.println("Connecting...");
+				logger.finer("Connecting to " + ip + " on port " + controlPort);
 				for (StatusReceiver receiver : statusReceivers)
 					receiver.receiveStatus(CONNECTING_STRING);
 				try {
@@ -93,7 +97,7 @@ public class RaspiNetworker extends Thread {
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");
 				} catch (Exception e) {
-					System.out.println("Error connecting to " + ip + ":" + controlPort);
+					logger.log(Level.SEVERE, "Error connecting to " + ip + ":" + controlPort, e);
 					socketOpened = false;
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Encountered error while openning socket: " + e);
@@ -103,10 +107,10 @@ public class RaspiNetworker extends Thread {
 			if (closeSocket) {
 				didSomething = true;
 				closeSocket = false;
-				System.out.println("Going to disconnect...");
+				logger.finer("Going to disconnect...");
 				if (socketOpened) {
 					try {
-						System.out.println("Disconnecting...");
+						logger.finer("Disconnecting...");
 						send(Message.createStopStreamMessage());
 						socket.close();
 						socket = null;
@@ -114,6 +118,7 @@ public class RaspiNetworker extends Thread {
 						for (StatusReceiver receiver : statusReceivers)
 							receiver.receiveStatus("Socket successfully closed");
 					} catch (Exception e) {
+						logger.log(Level.SEVERE, "Error when closing socket for " + ip + ":" + controlPort, e);
 						for (StatusReceiver receiver : statusReceivers)
 							receiver.receiveStatus("Encountered error while closing socket: " + e);
 					}
@@ -128,11 +133,11 @@ public class RaspiNetworker extends Thread {
 						l.recieve(obj);
 					}
 				} catch (JSONException e) {
-					e.printStackTrace();
+					logger.log(Level.WARNING, "Received invalid JSON", e);
 				} catch (IOException e) {
-					e.printStackTrace();
+					logger.log(Level.WARNING, "Error receiving JSON", e);
 				} catch (NullPointerException e) {
-					e.printStackTrace();
+					logger.log(Level.WARNING, "Random NullPointerException", e);
 				}
 			}
 			
@@ -140,7 +145,7 @@ public class RaspiNetworker extends Thread {
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					logger.log(Level.WARNING, "Thread interrupted", e);
 				}
 			}
 		}

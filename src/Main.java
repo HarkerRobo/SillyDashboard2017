@@ -6,6 +6,12 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -40,7 +46,21 @@ public class Main {
 	private static Config c;
 	private static Process p;
 
+	private static final Logger logger = Logger.getLogger(Main.class.getName());
+	
 	public static void main(String[] args) throws InterruptedException {
+		logger.setLevel(Level.ALL);
+
+		try {
+			FileHandler handler = new FileHandler("sillydashboard-log.%u.%g.txt", true);
+			handler.setLevel(Level.ALL);
+			handler.setFormatter(new SimpleFormatter());
+			logger.addHandler(handler);
+		} catch (SecurityException | IOException e1) {
+			e1.printStackTrace();
+		}
+		
+		logger.fine("Starting main program");
 		Gst.init("Stream viewer", args);
 		
 		try {
@@ -61,7 +81,7 @@ public class Main {
 			initializeFrame();
 			pollLogitech();
 		} catch (FileNotFoundException e) {
-			System.out.println("Could not load config file");
+			logger.log(Level.SEVERE, "Could not load config file", e);
 		}
 	}
 
@@ -74,7 +94,7 @@ public class Main {
 				try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				} catch (Exception e) {
-					System.out.println("Error setting look and feel");
+					logger.log(Level.SEVERE, "Error setting look and feel", e);
 				}
 				
 				final JFrame f = new JFrame("SillyDashboard");
@@ -126,7 +146,7 @@ public class Main {
 				    	try {
 							Thread.sleep(100);
 						} catch (InterruptedException e) {
-							e.printStackTrace();
+							logger.log(Level.WARNING, "Thread interrupted", e);
 						}
 				    	
 				    	visionStream.connect();
@@ -145,8 +165,7 @@ public class Main {
 		try {
 			p = Runtime.getRuntime().exec("python src/window_monitor.py");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Could not launch python", e);
 		}
 	}
 	
@@ -158,32 +177,35 @@ public class Main {
 				logitech = c;
 		}
 		if (logitech != null) {
+			logger.fine("Logitech controller found");
 			while (true) {
 				 logitech.poll();
 		         for (Component c : logitech.getComponents()) {
 		        	if(c.getName().equals("Button 0") && c.getPollData() == 1.0f) {
-		        		System.out.println("Turning driver stream on");
+		        		logger.finer("Turning driver stream on");
 		        		driverStream.connect();
 		        		Thread.sleep(500);
 		        	}
 		        	if(c.getName().equals("Button 1") && c.getPollData() == 1.0f) {
-		        		System.out.println("Turning driver stream off");
+		        		logger.finer("Turning driver stream off");
 		        		driverStream.disconnect();		
 		        		Thread.sleep(500);
 		        	}
 		        	if(c.getName().equals("Button 2") && c.getPollData() == 1.0f) {
-		        		System.out.println("Turning gear stream on");
+		        		logger.finer("Turning gear stream on");
 		        		gearStream.connect();
 		        		Thread.sleep(500);
 		        	}
 		        	if(c.getName().equals("Button 3") && c.getPollData() == 1.0f) {
-		        		System.out.println("Turning gear stream off");
+		        		logger.finer("Turning gear stream off");
 		        		gearStream.disconnect();
 		        		Thread.sleep(500);
 		        	}
 		         }
 		         Thread.sleep(100);
 			}
+		} else {
+			logger.log(Level.WARNING, "Logitech controller not found");
 		}
 	}
 }

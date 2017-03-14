@@ -10,11 +10,9 @@ public class StatusThread extends Thread {
 	private static final String YES = "\u2714";
 	private static final String NO = "\u274C";
 	
-	
 	private InetAddress ip;
 	private JLabel ping;
 	private JLabel ssh;
-	
 	
 	public StatusThread(String ipAddress, JLabel pingLabel, JLabel sshLabel) {
 		ping = pingLabel;
