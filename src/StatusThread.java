@@ -65,8 +65,8 @@ public class StatusThread extends Thread {
 		pingStatus = getPingStatus();
 		sshStatus = getSSHStatus();
 		
-		logger.finer("Ping status initially " + pingStatus);
-		logger.finer("SSH status initially " + sshStatus);
+		logger.finer("Ping status of " + ip.getHostAddress() + " initially " + pingStatus);
+		logger.finer("SSH status of " + ip.getHostAddress() + " initially " + sshStatus);
 		
 		while (true) {
 			ping.setText(pingStatus ? YES : NO);
@@ -83,11 +83,11 @@ public class StatusThread extends Thread {
 			
 			if (newPingStatus != pingStatus) {
 				pingStatus = newPingStatus;
-				logger.finer("Ping status changed to " + pingStatus);
+				logger.finer("Ping status of " + ip.getHostAddress() + " changed to " + pingStatus);
 			}
 			if (newSSHStatus != sshStatus) {
 				sshStatus = newSSHStatus;
-				logger.finer("SSH status changed to " + sshStatus);
+				logger.finer("SSH status of " + ip.getHostAddress() + " changed to " + sshStatus);
 			}
 		}
 	}
