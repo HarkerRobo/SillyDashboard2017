@@ -6,11 +6,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -54,7 +52,7 @@ public class Main {
 		try {
 			FileHandler handler = new FileHandler("sillydashboard-log.%u.%g.txt", true);
 			handler.setLevel(Level.ALL);
-			handler.setFormatter(new SimpleFormatter());
+			handler.setFormatter(new BunyanLogger());
 			logger.addHandler(handler);
 		} catch (SecurityException | IOException e1) {
 			e1.printStackTrace();

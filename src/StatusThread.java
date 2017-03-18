@@ -3,6 +3,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.logging.Logger;
 
 import javax.swing.JLabel;
 
@@ -13,6 +14,11 @@ public class StatusThread extends Thread {
 	private InetAddress ip;
 	private JLabel ping;
 	private JLabel ssh;
+	
+	private boolean pingStatus;
+	private boolean sshStatus;
+
+	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + StatusThread.class.getName());
 	
 	public StatusThread(String ipAddress, JLabel pingLabel, JLabel sshLabel) {
 		ping = pingLabel;
@@ -56,13 +62,32 @@ public class StatusThread extends Thread {
 		ping.setText(NO);
 		ssh.setText(NO);
 		
+		pingStatus = getPingStatus();
+		sshStatus = getSSHStatus();
+		
+		logger.finer("Ping status of " + ip.getHostAddress() + " initially " + pingStatus);
+		logger.finer("SSH status of " + ip.getHostAddress() + " initially " + sshStatus);
+		
 		while (true) {
-			ping.setText(getPingStatus() ? YES : NO);
-			ssh.setText(getSSHStatus() ? YES : NO);
+			ping.setText(pingStatus ? YES : NO);
+			ssh.setText(sshStatus ? YES : NO);
+			
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
+			}
+			
+			boolean newPingStatus = getPingStatus();
+			boolean newSSHStatus = getSSHStatus();
+			
+			if (newPingStatus != pingStatus) {
+				pingStatus = newPingStatus;
+				logger.finer("Ping status of " + ip.getHostAddress() + " changed to " + pingStatus);
+			}
+			if (newSSHStatus != sshStatus) {
+				sshStatus = newSSHStatus;
+				logger.finer("SSH status of " + ip.getHostAddress() + " changed to " + sshStatus);
 			}
 		}
 	}
