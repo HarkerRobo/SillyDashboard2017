@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
@@ -96,6 +97,7 @@ public class Main {
 				}
 				
 				final JFrame f = new JFrame("SillyDashboard");
+				f.setIconImage(new ImageIcon("icon.png").getImage());
 				f.getContentPane().setLayout(new BoxLayout(f.getContentPane(), BoxLayout.PAGE_AXIS));
 
 //				visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true);
