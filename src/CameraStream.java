@@ -156,5 +156,7 @@ public class CameraStream extends JPanel {
 	
 	public void connect() {
 		nwkr.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
+		if (!pipe.getState(1000).equals(State.PLAYING))
+			pipe.setState(State.PLAYING);
 	}
 }
