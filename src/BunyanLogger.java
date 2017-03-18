@@ -49,6 +49,8 @@ public class BunyanLogger extends Formatter {
 			message.put("err", error);
 		}
 		
+		message.put("method", rec.getSourceMethodName());
+		
 		message.put("msg", rec.getMessage());
 		message.put("time", FORMATTER.format(Instant.ofEpochMilli(rec.getMillis())));
 		message.put("v", 0);
