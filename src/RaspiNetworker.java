@@ -94,6 +94,7 @@ public class RaspiNetworker extends Thread {
 					connect();
 					socketOpened = true;
 					send(Message.createStartStreamMessage(iso, shutter, streamPort));
+					logger.fine("Successfully connected to " + ip + ":" + controlPort);
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");
 				} catch (Exception e) {
@@ -107,16 +108,16 @@ public class RaspiNetworker extends Thread {
 			if (closeSocket) {
 				didSomething = true;
 				closeSocket = false;
-				logger.finer("Going to disconnect...");
+				logger.finer("Going to disconnect from " + ip + ":" + controlPort + "...");
 				if (socketOpened) {
 					try {
-						logger.finer("Disconnecting...");
 						send(Message.createStopStreamMessage());
 						socket.close();
 						socket = null;
 						socketOpened = false;
 						for (StatusReceiver receiver : statusReceivers)
 							receiver.receiveStatus("Socket successfully closed");
+						logger.finer("Disconnected from " + ip + ":" + controlPort + "...");
 					} catch (Exception e) {
 						logger.log(Level.SEVERE, "Error when closing socket for " + ip + ":" + controlPort, e);
 						for (StatusReceiver receiver : statusReceivers)
