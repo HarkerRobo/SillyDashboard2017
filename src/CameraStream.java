@@ -14,6 +14,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
+import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
 
 @SuppressWarnings("serial")
@@ -24,14 +25,14 @@ public class CameraStream extends JPanel {
 
 	private JPanel controlPanel;
 
-	private Bin pipe;
+	private Pipeline pipe;
 	private RaspiNetworker nwkr;
 	private JSpinner isoField;
 	private JSpinner shutterField;
 
 	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
 		nwkr = networker;
-		createStream(streamPort, width, height);
+		createStream(name, streamPort, width, height);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
 
@@ -137,13 +138,15 @@ public class CameraStream extends JPanel {
 		add(availPanel, BorderLayout.SOUTH);
 
 		new StatusThread(networker.getIp(), pingLabel, sshLabel).start();
-		new PipelineDebugger(pipe, name).start();
 		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
-	private void createStream(int port, int width, int height) {
-        pipe = Bin.launch("udpsrc name=src port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false);
+	private void createStream(String name, int port, int width, int height) {
+		pipe = new Pipeline();
+		new PipelineDebugger(pipe, name).start();
+        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false));
+        
         pipe.play();
 	}
 

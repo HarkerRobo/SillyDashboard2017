@@ -13,7 +13,7 @@ public class PipelineDebugger extends Thread {
 	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + PipelineDebugger.class.getName());
 	
 	public PipelineDebugger(Bin pipe, String strmName) {
-		bus = pipe.getElementByName("src").getBus();
+		bus = pipe.getBus();
 		streamName = strmName;
 	}
 	
@@ -44,10 +44,17 @@ public class PipelineDebugger extends Thread {
 	   	});
 	   	
 	   	bus.connect(new Bus.STATE_CHANGED() {
+	   		private org.freedesktop.gstreamer.State oldFromState;
+	   		private org.freedesktop.gstreamer.State oldToState;
+	   		
 			@Override
 			public void stateChanged(GstObject source, org.freedesktop.gstreamer.State old,
 					org.freedesktop.gstreamer.State current, org.freedesktop.gstreamer.State pending) {
-				log(Level.FINER, "Pipeline state changed from " + old + " to " + current);
+				if (!old.equals(oldFromState) || !current.equals(oldToState)) {
+					log(Level.FINER, "Pipeline state changed from " + old + " to " + current);
+					oldFromState = old;
+					oldToState = current;
+				}
 			}
 		});
 	   	
