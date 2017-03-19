@@ -53,7 +53,7 @@ public class BunyanLogger extends Formatter {
 		
 		message.put("method", rec.getSourceMethodName());
 		
-		if (rec.getParameters().length > 0)
+		if (rec.getParameters() != null)
 			for (AbstractMap.SimpleImmutableEntry<String, Object> e : (AbstractMap.SimpleImmutableEntry<String, Object>[]) rec.getParameters())
 				message.put(e.getKey(), e.getValue());
 		
