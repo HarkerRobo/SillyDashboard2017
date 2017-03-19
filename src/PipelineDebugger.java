@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.GstObject;
-import org.freedesktop.gstreamer.State;
 
 public class PipelineDebugger extends Thread {
 	private Bus bus;
@@ -14,7 +13,7 @@ public class PipelineDebugger extends Thread {
 	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + PipelineDebugger.class.getName());
 	
 	public PipelineDebugger(Bin pipe, String strmName) {
-		bus = pipe.getBus();
+		bus = pipe.getElementByName("src").getBus();
 		streamName = strmName;
 	}
 	

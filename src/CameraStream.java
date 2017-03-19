@@ -143,7 +143,7 @@ public class CameraStream extends JPanel {
 	}
 
 	private void createStream(int port, int width, int height) {
-        pipe = Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false);
+        pipe = Bin.launch("udpsrc name=src port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false);
         pipe.play();
 	}
 
