@@ -106,13 +106,13 @@ public class Main {
 				
 //				f.add(Box.createVerticalGlue()); // Padding
 
-				driverStream = new CameraStream("Driver camera", raspinetDriver, c.strmPort(DRIVER), 1296, 972, false);
+				driverStream = new CameraStream("Driver camera", raspinetDriver, c.strmPort(DRIVER), 1296, 972, false, true);
 				f.add(driverStream);
 				driverStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) driverStream.getPreferredSize().getHeight()));
 
 				f.add(Box.createVerticalGlue()); // Padding
 				
-				gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false);
+				gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false, false);
 				f.add(gearStream);
 				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
 

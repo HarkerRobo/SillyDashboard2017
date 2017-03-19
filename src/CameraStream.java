@@ -30,9 +30,9 @@ public class CameraStream extends JPanel {
 	private JSpinner isoField;
 	private JSpinner shutterField;
 
-	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners) {
+	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners, boolean showCenterDivider) {
 		nwkr = networker;
-		createStream(name, streamPort, width, height);
+		createStream(name, streamPort, width, height, showCenterDivider);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
 
@@ -142,10 +142,12 @@ public class CameraStream extends JPanel {
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
-	private void createStream(String name, int port, int width, int height) {
+	private void createStream(String name, int port, int width, int height, boolean showCenterDivider) {
+		String cdString = showCenterDivider ? " ! gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! " : " ! ";
+		
 		pipe = new Pipeline();
 		new PipelineDebugger(pipe, name).start();
-        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! autovideosink", false));
+        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink", false));
         
         pipe.play();
 	}
