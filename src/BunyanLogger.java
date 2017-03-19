@@ -3,6 +3,7 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Formatter;
@@ -53,9 +54,12 @@ public class BunyanLogger extends Formatter {
 		
 		message.put("method", rec.getSourceMethodName());
 		
-		if (rec.getParameters() != null)
-			for (AbstractMap.SimpleImmutableEntry<String, Object> e : (AbstractMap.SimpleImmutableEntry<String, Object>[]) rec.getParameters())
+		if (rec.getParameters() != null) {
+			for (Object obj : rec.getParameters()) {
+				AbstractMap.SimpleImmutableEntry<String, Object> e = (AbstractMap.SimpleImmutableEntry<String, Object>) obj;
 				message.put(e.getKey(), e.getValue());
+			}
+		}
 		
 		message.put("msg", rec.getMessage());
 		message.put("time", FORMATTER.format(Instant.ofEpochMilli(rec.getMillis())));
