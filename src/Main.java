@@ -51,7 +51,7 @@ public class Main {
 		logger.setLevel(Level.ALL);
 
 		try {
-			FileHandler handler = new FileHandler("sillydashboard-log.%u.%g.txt", true);
+			FileHandler handler = new FileHandler("sillydashboard-log.txt", true);
 			handler.setLevel(Level.ALL);
 			handler.setFormatter(new BunyanLogger());
 			logger.addHandler(handler);
