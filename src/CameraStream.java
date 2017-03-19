@@ -137,6 +137,7 @@ public class CameraStream extends JPanel {
 		add(availPanel, BorderLayout.SOUTH);
 
 		new StatusThread(networker.getIp(), pingLabel, sshLabel).start();
+		new PipelineDebugger(pipe, name).start();
 		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}

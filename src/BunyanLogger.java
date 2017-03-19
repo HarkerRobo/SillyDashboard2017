@@ -2,6 +2,7 @@ import java.lang.management.ManagementFactory;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Formatter;
@@ -30,7 +31,8 @@ public class BunyanLogger extends Formatter {
 	}
 	
     // this method is called for every log records
-    public String format(LogRecord rec) {
+    @SuppressWarnings("unchecked")
+	public String format(LogRecord rec) {
 		JSONObject message = new JSONObject();
 		message.put("name", rec.getSourceClassName());
 		message.put("hostname", HOSTNAME);
@@ -50,6 +52,10 @@ public class BunyanLogger extends Formatter {
 		}
 		
 		message.put("method", rec.getSourceMethodName());
+		
+		if (rec.getParameters().length > 0)
+			for (AbstractMap.SimpleImmutableEntry<String, Object> e : (AbstractMap.SimpleImmutableEntry<String, Object>[]) rec.getParameters())
+				message.put(e.getKey(), e.getValue());
 		
 		message.put("msg", rec.getMessage());
 		message.put("time", FORMATTER.format(Instant.ofEpochMilli(rec.getMillis())));
