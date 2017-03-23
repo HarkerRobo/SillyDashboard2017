@@ -9,12 +9,14 @@ import org.freedesktop.gstreamer.GstObject;
 public class PipelineDebugger extends Thread {
 	private Bus bus;
 	private String streamName;
+	private Restarter restarter;
 	
 	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + PipelineDebugger.class.getName());
 	
-	public PipelineDebugger(Bin pipe, String strmName) {
+	public PipelineDebugger(Bin pipe, String strmName, Restarter res) {
 		bus = pipe.getBus();
 		streamName = strmName;
+		restarter = res;
 	}
 	
 	private void log(Level level, String message) {
@@ -40,7 +42,7 @@ public class PipelineDebugger extends Thread {
 			@Override
 			public void errorMessage(GstObject source, int code, String message) {
 				log(Level.SEVERE, message);
-			}    		
+			}
 	   	});
 	   	
 	   	bus.connect(new Bus.STATE_CHANGED() {
@@ -61,8 +63,13 @@ public class PipelineDebugger extends Thread {
 	   	bus.connect(new Bus.EOS() {
             public void endOfStream(GstObject source) {
                 log(Level.FINER, "Pipeline quit");
+                restarter.restart();
             }
         });
+	}
+	
+	public interface Restarter {
+		public void restart();
 	}
 	
 }

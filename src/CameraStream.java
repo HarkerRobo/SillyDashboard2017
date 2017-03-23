@@ -17,6 +17,8 @@ import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
 
+import com.sun.jna.Callback;
+
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
 	
@@ -124,7 +126,7 @@ public class CameraStream extends JPanel {
 		availPanel.add(pingPanel);
 		
 		JPanel sshPanel = new JPanel();
-		JLabel sshLabel = new JLabel("SSHable");
+		JLabel sshLabel = new JLabel();
 		sshLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, pingLabel.getFont().getSize()));
 		sshPanel.add(sshLabel);
 		sshPanel.add(new JLabel("SSHable"));
@@ -137,7 +139,9 @@ public class CameraStream extends JPanel {
 		add(statusLabel, BorderLayout.CENTER);
 		add(availPanel, BorderLayout.SOUTH);
 
-		new StatusThread(networker.getIp(), pingLabel, sshLabel).start();
+		StatusThread t = new StatusThread(networker.getIp(), pingLabel, sshLabel);
+		t.setDaemon(true);
+		t.start();
 		
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
@@ -146,8 +150,15 @@ public class CameraStream extends JPanel {
 		String cdString = showCenterDivider ? " ! gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! " : " ! ";
 		
 		pipe = new Pipeline();
-		new PipelineDebugger(pipe, name).start();
-        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink", false));
+		PipelineDebugger p = new PipelineDebugger(pipe, name, new PipelineDebugger.Restarter() {
+			public void restart() {
+				pipe.stop();
+				createStream(name, port, width, height, showCenterDivider);
+			}
+		});
+		p.setDaemon(true);
+		p.start();
+        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink name=sink", false));
         
         pipe.play();
 	}
@@ -162,7 +173,5 @@ public class CameraStream extends JPanel {
 	
 	public void connect() {
 		nwkr.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
-		if (!pipe.getState(1000).equals(State.PLAYING))
-			pipe.setState(State.PLAYING);
 	}
 }
