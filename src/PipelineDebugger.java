@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Bus;
 import org.freedesktop.gstreamer.GstObject;
+import org.freedesktop.gstreamer.Message;
 
 public class PipelineDebugger extends Thread {
 	private Bus bus;
@@ -42,6 +43,8 @@ public class PipelineDebugger extends Thread {
 			@Override
 			public void errorMessage(GstObject source, int code, String message) {
 				log(Level.SEVERE, message);
+				if (message.equals("Output window was closed"))
+					restarter.restart();
 			}
 	   	});
 	   	
@@ -66,6 +69,16 @@ public class PipelineDebugger extends Thread {
                 restarter.restart();
             }
         });
+	   	
+	   	bus.connect("element", new Bus.MESSAGE() {
+			@Override
+			public void busMessage(Bus bus, Message message) {
+				if (message.getStructure().getName().equals("GstUDPSrcTimeout")) {
+					double timeout = (double) ((long) message.getStructure().getValue("timeout") / 1000000) / 1000;
+//					log(Level.WARNING, "Received udp timeout after " + timeout + " seconds");
+				}
+			}
+		});
 	}
 	
 	public interface Restarter {

@@ -32,15 +32,15 @@ import net.java.games.input.ControllerEnvironment;
 public class Main {
 //	private static final String VISION = "Vision";
 	private static final String DRIVER = "Driver";
-	private static final String GEAR = "Gear";
+//	private static final String GEAcR = "Gear";
 
 	public static RaspiNetworker raspinetDriver;
 //	public static RaspiNetworker raspinetVision;
-	public static RaspiNetworker raspinetGear;
+//	public static RaspiNetworker raspinetGear;
 
 	private static CameraStream driverStream;
 //	private static CameraStream visionStream;
-	private static CameraStream gearStream;
+//	private static CameraStream gearStream;
 	
 	private static Config c;
 	private static Process p;
@@ -73,9 +73,9 @@ public class Main {
 			raspinetDriver.setDaemon(true);
 			raspinetDriver.start();
 			
-			raspinetGear = new RaspiNetworker(c.ip(GEAR), c.ctrlPort(GEAR), c.strmPort(GEAR), false);
-			raspinetGear.setDaemon(true);
-			raspinetGear.start();
+//			raspinetGear = new RaspiNetworker(c.ip(GEAR), c.ctrlPort(GEAR), c.strmPort(GEAR), false);
+//			raspinetGear.setDaemon(true);
+//			raspinetGear.start();
 			initializeMonitor();
 			initializeFrame();
 			pollLogitech();
@@ -112,9 +112,9 @@ public class Main {
 
 				f.add(Box.createVerticalGlue()); // Padding
 				
-				gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false, false);
-				f.add(gearStream);
-				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
+//				gearStream = new CameraStream("Gear camera", raspinetGear, c.strmPort(GEAR), 640, 480, false, false);
+//				f.add(gearStream);
+//				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
 
 				f.pack();
 				f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -125,7 +125,7 @@ public class Main {
 				    	
 //				    	visionStream.close();
 				    	driverStream.close();
-				    	gearStream.close();
+//				    	gearStream.close();
 				    	
 				    	if (p != null) {
 				    		p.destroy();
@@ -141,7 +141,7 @@ public class Main {
 					public void actionPerformed(ActionEvent arg0) {
 //						visionStream.disconnect();
 				    	driverStream.disconnect();
-				    	gearStream.disconnect();
+//				    	gearStream.disconnect();
 				    	
 				    	try {
 							Thread.sleep(100);
@@ -151,7 +151,7 @@ public class Main {
 				    	
 //				    	visionStream.connect();
 				    	driverStream.connect();
-				    	gearStream.connect();
+//				    	gearStream.connect();
 					}
 		        });
 				
@@ -193,12 +193,12 @@ public class Main {
 		        	}
 		        	if(c.getName().equals("Button 2") && c.getPollData() == 1.0f) {
 		        		logger.finer("Turning gear stream on");
-		        		gearStream.connect();
+//		        		gearStream.connect();
 		        		Thread.sleep(500);
 		        	}
 		        	if(c.getName().equals("Button 3") && c.getPollData() == 1.0f) {
 		        		logger.finer("Turning gear stream off");
-		        		gearStream.disconnect();
+//		        		gearStream.disconnect();
 		        		Thread.sleep(500);
 		        	}
 		         }

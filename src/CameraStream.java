@@ -17,8 +17,6 @@ import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
 
-import com.sun.jna.Callback;
-
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
 	
@@ -146,7 +144,7 @@ public class CameraStream extends JPanel {
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
-	private void createStream(String name, int port, int width, int height, boolean showCenterDivider) {
+	private void createStream(final String name, final int port, final int width, final int height, final boolean showCenterDivider) {
 		String cdString = showCenterDivider ? " ! gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! " : " ! ";
 		
 		pipe = new Pipeline();
@@ -158,7 +156,7 @@ public class CameraStream extends JPanel {
 		});
 		p.setDaemon(true);
 		p.start();
-        pipe.add(Bin.launch("udpsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink name=sink", false));
+        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink name=sink", false));
         
         pipe.play();
 	}
