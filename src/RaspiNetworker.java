@@ -94,6 +94,7 @@ public class RaspiNetworker extends Thread {
 					connect();
 					socketOpened = true;
 					send(Message.createStartStreamMessage(iso, shutter, streamPort));
+					send(Message.createCntMessage());
 					logger.fine("Successfully connected to " + ip + ":" + controlPort);
 					for (StatusReceiver receiver : statusReceivers)
 						receiver.receiveStatus("Socket successfully opened");

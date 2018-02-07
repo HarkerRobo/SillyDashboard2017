@@ -26,4 +26,11 @@ public class Message {
 		message.put("type", "stop");
 		return message;
 	}
+
+	public static JSONObject createCntMessage()
+	{
+		JSONObject message = new JSONObject();
+		message.put("type", "cnt");
+		return message;
+	}
 }

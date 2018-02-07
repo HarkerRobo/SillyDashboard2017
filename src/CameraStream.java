@@ -14,11 +14,19 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
+import org.freedesktop.gstreamer.Closure;
+import org.freedesktop.gstreamer.Element;
+import org.freedesktop.gstreamer.GObject;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.sun.jna.CallbackProxy;
 
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
+	private static final int SCALE = 2;
 	
 	private JLayeredPane layeredPane = null;
 	private JLabel statusLabel;
@@ -30,9 +38,28 @@ public class CameraStream extends JPanel {
 	private JSpinner isoField;
 	private JSpinner shutterField;
 
+	private String fromCnt(JSONArray contour) {
+		String ret = "<polyline points=\"";
+		for (Object pointWrapper : contour) {
+			JSONArray point = ((JSONArray) pointWrapper).getJSONArray(0);
+			ret += (point.getInt(0)*SCALE) + "," + (point.getInt(1)*SCALE) + " ";
+		}
+		JSONArray fPoint = contour.getJSONArray(0).getJSONArray(0);
+		ret += (fPoint.getInt(0)*SCALE) + "," + (fPoint.getInt(1)*SCALE);
+		return ret + "\" style=\"fill: none; stroke: yellow; stroke-width: 8;\" />";
+	}
+	
+	private String fromCnts(JSONArray contours) {
+		String ret = "";
+		for (Object contour : contours) {
+			ret += fromCnt((JSONArray) contour);
+		}
+		return ret;
+	}
+	
 	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners, boolean showCenterDivider) {
 		nwkr = networker;
-		createStream(name, streamPort, width, height, showCenterDivider);
+		createStream(name, streamPort, width, height, showCorners, showCenterDivider);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
 
@@ -41,17 +68,37 @@ public class CameraStream extends JPanel {
 				statusLabel.setText("<html>" + status + "</html>");
 			}
 		});
+		
+		if (showCorners) {
+			networker.addMessageListener(new RaspiNetworker.RaspiListener() {
+				@Override
+				public void recieve(JSONObject obj) {
+					if (pipe != null && pipe.isPlaying()) {
+						if (obj.isNull("corners")) {
+							pipe.getElementByName("overlay").set("data", String.format(
+									"<svg>" +fromCnts(obj.getJSONArray("valid")) + "</svg>"));
+						} else {
+							JSONArray corners = obj.getJSONArray("corners");
+							pipe.getElementByName("overlay").set("data", String.format(
+									"<svg>%s" +
+									"<rect x=\"%d\" y=\"%d\" width=\"%d\" height=\"%d\" style=\"fill: none; stroke: blue; stroke-width:8\"/>" +
+									"</svg>", fromCnts(obj.getJSONArray("valid")), corners.getInt(0)*SCALE, corners.getInt(1)*SCALE, corners.getInt(2)*SCALE, corners.getInt(3)*SCALE));
+						}
+					}
+				}
+			});
+		}
 
 		setLayout(new BorderLayout());
 
-		if (showCorners) {
-			layeredPane = new JLayeredPane();
-
-			CornerViewer cv = new CornerViewer(networker, width);
-			layeredPane.add(cv, new Integer(1));
-
-			add(layeredPane, BorderLayout.CENTER);
-		}
+//		if (showCorners) {
+//			layeredPane = new JLayeredPane();
+//
+//			CornerViewer cv = new CornerViewer(networker, width);
+//			layeredPane.add(cv, new Integer(1));
+//
+//			add(layeredPane, BorderLayout.CENTER);
+//		}
 
 		// ISO
 		isoField = new JSpinner(new SpinnerNumberModel(RaspiNetworker.ISO, 100, 800, 1));
@@ -107,6 +154,13 @@ public class CameraStream extends JPanel {
 		controlPanel.add(buttonPanel, BorderLayout.NORTH);
 		if (showCorners) {
 			controlPanel.add(shutterIsoPanel, BorderLayout.SOUTH);
+//			pipe.getElementByName("overlay").connect("draw", new Closure() {
+//				@SuppressWarnings("unused")
+//				public void invoke(Element overlay) {
+//					System.out.println("hello");
+//					System.out.println(overlay);
+//				}
+//			});
 		}
 
 		// Status
@@ -144,19 +198,24 @@ public class CameraStream extends JPanel {
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
-	private void createStream(final String name, final int port, final int width, final int height, final boolean showCenterDivider) {
-		String cdString = showCenterDivider ? " ! gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! " : " ! ";
+	private void createStream(final String name, final int port, final int width, final int height, final boolean showCorners, final boolean showCenterDivider) {
+		String cdString = "";
+		if (showCorners)
+//			cdString += "cairooverlay name=overlay ! ";
+			cdString += "rsvgoverlay name=overlay ! ";
+		if (showCenterDivider)
+				cdString += "gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! ";
 		
 		pipe = new Pipeline();
 		PipelineDebugger p = new PipelineDebugger(pipe, name, new PipelineDebugger.Restarter() {
 			public void restart() {
 				pipe.stop();
-				createStream(name, port, width, height, showCenterDivider);
+				createStream(name, port, width, height, showCorners, showCenterDivider);
 			}
 		});
 		p.setDaemon(true);
 		p.start();
-        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert" + cdString + "autovideosink name=sink", false));
+        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
         
         pipe.play();
 	}

@@ -30,16 +30,16 @@ import net.java.games.input.ControllerEnvironment;
  *
  */
 public class Main {
-//	private static final String VISION = "Vision";
+	private static final String VISION = "Vision";
 	private static final String DRIVER = "Driver";
 //	private static final String GEAcR = "Gear";
 
 	public static RaspiNetworker raspinetDriver;
-//	public static RaspiNetworker raspinetVision;
+	public static RaspiNetworker raspinetVision;
 //	public static RaspiNetworker raspinetGear;
 
 	private static CameraStream driverStream;
-//	private static CameraStream visionStream;
+	private static CameraStream visionStream;
 //	private static CameraStream gearStream;
 	
 	private static Config c;
@@ -65,9 +65,9 @@ public class Main {
 		try {
 			c = new Config("shared/config.yml");
 
-//			raspinetVision = new RaspiNetworker(c.ip(VISION), c.ctrlPort(VISION), c.strmPort(VISION), false);
-//			raspinetVision.setDaemon(true);
-//			raspinetVision.start();
+			raspinetVision = new RaspiNetworker(c.ip(VISION), c.ctrlPort(VISION), c.strmPort(VISION), true);
+			raspinetVision.setDaemon(true);
+			raspinetVision.start();
 	
 			raspinetDriver = new RaspiNetworker(c.ip(DRIVER), c.ctrlPort(DRIVER), c.strmPort(DRIVER), false);
 			raspinetDriver.setDaemon(true);
@@ -100,11 +100,11 @@ public class Main {
 				f.setIconImage(new ImageIcon("icon.png").getImage());
 				f.getContentPane().setLayout(new BoxLayout(f.getContentPane(), BoxLayout.PAGE_AXIS));
 
-//				visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true);
-//				f.add(visionStream);
-//				visionStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) visionStream.getPreferredSize().getHeight()));
+				visionStream = new CameraStream("Vision camera", raspinetVision, c.strmPort(VISION), 640, 480, true, false);
+				f.add(visionStream);
+				visionStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) visionStream.getPreferredSize().getHeight()));
 				
-//				f.add(Box.createVerticalGlue()); // Padding
+				f.add(Box.createVerticalGlue()); // Padding
 
 				driverStream = new CameraStream("Driver camera", raspinetDriver, c.strmPort(DRIVER), 1296, 972, false, true);
 				f.add(driverStream);
@@ -123,7 +123,7 @@ public class Main {
 				    public void windowClosing(WindowEvent e) {
 				    	f.dispose();
 				    	
-//				    	visionStream.close();
+				    	visionStream.close();
 				    	driverStream.close();
 //				    	gearStream.close();
 				    	
@@ -139,7 +139,7 @@ public class Main {
 		        f.getRootPane().getActionMap().put("r", new AbstractAction() {
 					@Override
 					public void actionPerformed(ActionEvent arg0) {
-//						visionStream.disconnect();
+						visionStream.disconnect();
 				    	driverStream.disconnect();
 //				    	gearStream.disconnect();
 				    	
