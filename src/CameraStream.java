@@ -14,15 +14,10 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 
 import org.freedesktop.gstreamer.Bin;
-import org.freedesktop.gstreamer.Closure;
-import org.freedesktop.gstreamer.Element;
-import org.freedesktop.gstreamer.GObject;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.sun.jna.CallbackProxy;
 
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
