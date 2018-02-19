@@ -116,6 +116,8 @@ public class Main {
 //				f.add(gearStream);
 //				gearStream.setMaximumSize(new Dimension(Integer.MAX_VALUE, (int) gearStream.getPreferredSize().getHeight()));
 
+				f.add(new BandwidthUsage());
+				
 				f.pack();
 				f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 				f.addWindowListener(new WindowAdapter() {
