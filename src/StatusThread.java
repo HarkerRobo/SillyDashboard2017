@@ -43,7 +43,7 @@ public class StatusThread extends Thread {
 		Socket socket = null;
 	    try {
 	    	socket = new Socket();
-	    	socket.connect(new InetSocketAddress(ip, 22), 2000);
+	    	socket.connect(new InetSocketAddress(ip, 5804), 2000);
 	        return true;
 	    } catch (IOException ex) {
 	        return false;

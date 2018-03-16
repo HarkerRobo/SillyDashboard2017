@@ -200,6 +200,8 @@ public class CameraStream extends JPanel {
 			cdString += "rsvgoverlay name=overlay ! ";
 		if (showCenterDivider)
 				cdString += "gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! ";
+		if (name.equals("Gear camera"))
+			cdString += "videoflip method=counterclockwise ! ";
 		
 		pipe = new Pipeline();
 		PipelineDebugger p = new PipelineDebugger(pipe, name, new PipelineDebugger.Restarter() {
@@ -211,7 +213,8 @@ public class CameraStream extends JPanel {
 		p.setDaemon(true);
 		p.start();
         pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
-        
+//        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtpmp2tdepay ! tsdemux name=demuxer demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink name=sink ", false));
+		
         pipe.play();
 	}
 
