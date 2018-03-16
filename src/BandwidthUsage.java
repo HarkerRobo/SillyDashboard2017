@@ -62,7 +62,9 @@ public class BandwidthUsage extends JPanel {
 				totalUsage += Double.parseDouble(split[i]); 
 			}
 			
-			usage.setText(renderUsageLabel(usageUnits(totalUsage * 8)));
+			String formattedUsage = usageUnits(totalUsage * 8);
+			usage.setText(renderUsageLabel(formattedUsage));
+			logger.finer("Bandwidth usage is " + formattedUsage);
 		}
 
 	}
