@@ -25,64 +25,65 @@ public class RaspiNetworker extends Thread {
 	public static final int ISO = 500;
 	public static final int SHUTTER = 200000;
 	public static final int SOCKET_TIMEOUT = 5000;
-	
+
 	private List<RaspiListener> listeners = new LinkedList<RaspiListener>();
 	private List<StatusReceiver> statusReceivers = new LinkedList<StatusReceiver>();
-	
+
 	// Socket configuration
 	private Socket socket;
 	private String ip;
 	private int controlPort;
 	private int streamPort;
 	private boolean shouldReceiveCorners;
-	
+
 	private int iso = ISO;
 	private int shutter = SHUTTER;
-	
+
 	// Streams
 	private BufferedReader in;
 	private PrintWriter out;
-	
+
 	private boolean openSocket = false; // Whether to reopen socket in the "event loop"
 	private boolean closeSocket = false;
 	private boolean socketOpened = false;
 
 	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + RaspiNetworker.class.getName());
-	
+
 	public RaspiNetworker(String ipaddress, int controlPortNum, int streamPortNum, boolean receiveCorners) {
 		ip = ipaddress;
 		controlPort = controlPortNum;
 		streamPort = streamPortNum;
 		shouldReceiveCorners = receiveCorners;
+		new TimeSender(ipaddress).start();
 	}
-	
+
 	public String getIp() {
 		return ip;
 	}
-	
+
 	private void connect() throws UnknownHostException, IOException {
 		socket = new Socket();
 		socket.connect(new InetSocketAddress(ip, controlPort), SOCKET_TIMEOUT);
 		in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8));
 	}
-	
+
 	public void reconnect(int newIso, int newShutter) {
 		iso = newIso;
 		shutter = newShutter;
 		openSocket = true;
 	}
-	
+
 	public void disconnect() {
 		closeSocket = true;
 	}
 
 	public void run() {
 		boolean didSomething = false;
-		
+
 		while (true) {
 			didSomething = false;
-			
+
 			if (openSocket) {
 				didSomething = true;
 				openSocket = false;
@@ -105,7 +106,7 @@ public class RaspiNetworker extends Thread {
 						receiver.receiveStatus("Encountered error while openning socket: " + e);
 				}
 			}
-			
+
 			if (closeSocket) {
 				didSomething = true;
 				closeSocket = false;
@@ -126,7 +127,7 @@ public class RaspiNetworker extends Thread {
 					}
 				}
 			}
-			
+
 			if (socketOpened && shouldReceiveCorners) {
 				didSomething = true;
 				try {
@@ -142,7 +143,7 @@ public class RaspiNetworker extends Thread {
 					logger.log(Level.WARNING, "Random NullPointerException", e);
 				}
 			}
-			
+
 			if (!didSomething) {
 				try {
 					Thread.sleep(100);
@@ -161,15 +162,15 @@ public class RaspiNetworker extends Thread {
 	public void addMessageListener(RaspiListener raspiListener) {
 		listeners.add(raspiListener);
 	}
-	
+
 	public void addStatusReceiver(StatusReceiver receiver) {
 		statusReceivers.add(receiver);
 	}
-	
+
 	public interface StatusReceiver {
 		public void receiveStatus(String status);
 	}
-	
+
 	/**
 	 * Class RaspiListener represents essentially a callback function for what to do
 	 * with received JSONObject messages
