@@ -22,7 +22,7 @@ import org.json.JSONObject;
 @SuppressWarnings("serial")
 public class CameraStream extends JPanel {
 	private static final int SCALE = 2;
-	
+
 	private JLayeredPane layeredPane = null;
 	private JLabel statusLabel;
 
@@ -32,6 +32,7 @@ public class CameraStream extends JPanel {
 	private RaspiNetworker nwkr;
 	private JSpinner isoField;
 	private JSpinner shutterField;
+	private FrameMonitor frameMonitor;
 
 	private String fromCnt(JSONArray contour) {
 		String ret = "<polyline points=\"";
@@ -43,7 +44,7 @@ public class CameraStream extends JPanel {
 		ret += (fPoint.getInt(0)*SCALE) + "," + (fPoint.getInt(1)*SCALE);
 		return ret + "\" style=\"fill: none; stroke: yellow; stroke-width: 8;\" />";
 	}
-	
+
 	private String fromCnts(JSONArray contours) {
 		String ret = "";
 		for (Object contour : contours) {
@@ -51,9 +52,12 @@ public class CameraStream extends JPanel {
 		}
 		return ret;
 	}
-	
+
 	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners, boolean showCenterDivider) {
 		nwkr = networker;
+		frameMonitor = new FrameMonitor(name);
+		frameMonitor.setDaemon(true);
+		frameMonitor.start();
 		createStream(name, streamPort, width, height, showCorners, showCenterDivider);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
@@ -63,7 +67,7 @@ public class CameraStream extends JPanel {
 				statusLabel.setText("<html>" + status + "</html>");
 			}
 		});
-		
+
 		if (showCorners) {
 			networker.addMessageListener(new RaspiNetworker.RaspiListener() {
 				@Override
@@ -164,21 +168,21 @@ public class CameraStream extends JPanel {
 
 		// Availability
 		JPanel availPanel = new JPanel();
-		
+
 		JPanel pingPanel = new JPanel();
 		JLabel pingLabel = new JLabel();
 		pingLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, pingLabel.getFont().getSize()));
 		pingPanel.add(pingLabel);
 		pingPanel.add(new JLabel("Pingable"));
 		availPanel.add(pingPanel);
-		
+
 		JPanel sshPanel = new JPanel();
 		JLabel sshLabel = new JLabel();
 		sshLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, pingLabel.getFont().getSize()));
 		sshPanel.add(sshLabel);
 		sshPanel.add(new JLabel("SSHable"));
 		availPanel.add(sshPanel);
-		
+
 		setBorder(BorderFactory.createTitledBorder(name));
 
 		setLayout(new BorderLayout());
@@ -189,7 +193,7 @@ public class CameraStream extends JPanel {
 		StatusThread t = new StatusThread(networker.getIp(), pingLabel, sshLabel);
 		t.setDaemon(true);
 		t.start();
-		
+
 		networker.reconnect(RaspiNetworker.ISO, RaspiNetworker.SHUTTER);
 	}
 
@@ -202,7 +206,7 @@ public class CameraStream extends JPanel {
 				cdString += "gdkpixbufoverlay location=line.png offset-x=" + (width / 2 - 2) + " overlay-height=" + height + " ! ";
 		if (name.equals("Gear camera"))
 			cdString += "videoflip method=counterclockwise ! ";
-		
+
 		pipe = new Pipeline();
 		PipelineDebugger p = new PipelineDebugger(pipe, name, new PipelineDebugger.Restarter() {
 			public void restart() {
@@ -212,20 +216,22 @@ public class CameraStream extends JPanel {
 		});
 		p.setDaemon(true);
 		p.start();
+
         pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
 //        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtpmp2tdepay ! tsdemux name=demuxer demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink name=sink ", false));
-		
+
+		frameMonitor.setPipeline(pipe);
         pipe.play();
 	}
 
 	public void close() {
 		pipe.setState(State.NULL);
 	}
-	
+
 	public void disconnect() {
 		nwkr.disconnect();
 	}
-	
+
 	public void connect() {
 		nwkr.reconnect((Integer) isoField.getValue(), (Integer) shutterField.getValue());
 	}
