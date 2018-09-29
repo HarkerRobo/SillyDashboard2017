@@ -4,6 +4,7 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -16,6 +17,7 @@ import javax.swing.SpinnerNumberModel;
 import org.freedesktop.gstreamer.Bin;
 import org.freedesktop.gstreamer.Pipeline;
 import org.freedesktop.gstreamer.State;
+import org.freedesktop.gstreamer.elements.AppSink;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,6 +35,8 @@ public class CameraStream extends JPanel {
 	private JSpinner isoField;
 	private JSpinner shutterField;
 	private FrameMonitor frameMonitor;
+
+	private static final Logger logger = Logger.getLogger(Main.class.getName() + "." + BandwidthUsage.class.getName());
 
 	private String fromCnt(JSONArray contour) {
 		String ret = "<polyline points=\"";
@@ -54,11 +58,14 @@ public class CameraStream extends JPanel {
 	}
 
 	public CameraStream(String name, final RaspiNetworker networker, int streamPort, int width, int height, boolean showCorners, boolean showCenterDivider) {
+		logger.info("Creating camera stream for " + name);
 		nwkr = networker;
 		frameMonitor = new FrameMonitor(name);
 		frameMonitor.setDaemon(true);
 		frameMonitor.start();
+		logger.info("Setting up camera stream for " + name);
 		createStream(name, streamPort, width, height, showCorners, showCenterDivider);
+		logger.info("Set up camera stream for " + name);
 
 		networker.addStatusReceiver(new RaspiNetworker.StatusReceiver() {
 
@@ -217,10 +224,13 @@ public class CameraStream extends JPanel {
 		p.setDaemon(true);
 		p.start();
 
-        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
-//        pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtpmp2tdepay ! tsdemux name=demuxer demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink name=sink ", false));
+		// pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
+		pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "tee name=t t. ! queue ! autovideosink name=sink t. ! queue ! appsink name=appsink", false));
+		// pipe.add(Bin.launch("tcpclientsrc port=" + port + " ! application/x-rtp, payload=96 ! rtph264depay ! avdec_h264 ! videoconvert ! " + cdString + "autovideosink name=sink", false));
+  		// pipe.add(Bin.launch("udpsrc port=" + port + " timeout=5000000000 ! application/x-rtp, payload=96 ! rtpmp2tdepay ! tsdemux name=demuxer demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink demuxer ! queue ! avdec_h264 ! videoconvert ! autovideosink name=sink ", false));
 
-		frameMonitor.setPipeline(pipe);
+		// frameMonitor.setPipeline(pipe);
+		frameMonitor.setAppsink((AppSink) pipe.getElementByName("appsink"));
         pipe.play();
 	}
 
